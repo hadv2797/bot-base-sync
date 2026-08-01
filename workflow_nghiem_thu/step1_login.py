@@ -3,7 +3,7 @@ from playwright.sync_api import sync_playwright
 
 BASE_URL = "https://workflow.base.vn/qttrienkhaiduandandung-12551"
 USERNAME = "hadv@manfusi.com"
-PASSWORD = "RX8Q4C"
+PASSWORD = "RXZZL48Q4C"
 
 def login_and_get_page(playwright_instance):
     print("--- KHỞI TẠO & ĐĂNG NHẬP BASE ---")
