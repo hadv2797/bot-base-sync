@@ -3,7 +3,7 @@ import sys
 import time
 import random
 import threading
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from playwright.sync_api import sync_playwright
 
@@ -35,20 +35,20 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # ==========================================
-# 2. CẤU HÌNH VÀ LOGIC CHÍNH
+# 2. CẤU HÌNH VÀ LOGIC CHÍNH (THEO GIỜ UTC)
 # ==========================================
-START_HOUR = 6   # 6h sáng
-END_HOUR = 22    # 22h tối
-
-def get_now_vn():
-    """Lấy đúng chuẩn múi giờ UTC+7 (Việt Nam)"""
-    tz_vn = timezone(timedelta(hours=7))
-    return datetime.now(tz_vn)
+# Giờ VN mong muốn: 06:00 - 22:00
+# Quy đổi UTC (VN - 7 tiếng): 23:00 đêm hôm trước đến 15:00 chiều hôm sau
+START_UTC_HOUR = 23  # Tương đương 6h sáng VN
+END_UTC_HOUR = 15    # Tương đương 22h tối VN
 
 def is_working_hours():
-    """Kiểm tra xem hiện tại có nằm trong khoảng 6h - 22h giờ VN không"""
-    now = get_now_vn()
-    return START_HOUR <= now.hour < END_HOUR
+    """
+    Kiểm tra khung giờ theo giờ hệ thống UTC của Render.
+    Chạy từ 23:00 UTC (6h VN) qua đêm tới 15:00 UTC (22h VN).
+    """
+    now_hour = datetime.now().hour
+    return now_hour >= START_UTC_HOUR or now_hour < END_UTC_HOUR
 
 def run_single_pipeline():
     """
@@ -57,7 +57,7 @@ def run_single_pipeline():
     """
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"\n==================================================")
-    print(f"🚀 [{current_time}] BẮT ĐẦU CHẠY ĐỒNG BỘ XỬ LÝ SỰ CỐ")
+    print(f"🚀 [{current_time} UTC] BẮT ĐẦU CHẠY ĐỒNG BỘ XỬ LÝ SỰ CỐ")
     print(f"==================================================")
 
     browser = None
@@ -92,7 +92,7 @@ def run_single_pipeline():
 
 def main():
     print(f"🤖 Bot Auto-Sync Supabase (Xử Lý Sự Cố) đã khởi động!")
-    print(f"⏰ Khung giờ hoạt động: {START_HOUR}:00 - {END_HOUR}:00 hàng ngày.\n")
+    print(f"⏰ Khung giờ hoạt động: 23:00 - 15:00 UTC (Tương đương 06:00 - 22:00 giờ VN).\n")
 
     while True:
         if is_working_hours():
@@ -101,16 +101,18 @@ def main():
 
             # Random thời gian nghỉ từ 1100s đến 1300s (~18 - 21 phút)
             sleep_seconds = random.randint(1100, 1300)
+            
+            # Tính thời gian chạy tiếp theo thuần UTC (khớp hoàn toàn với máy chủ Render)
             next_run = datetime.now() + timedelta(seconds=sleep_seconds)
             
-            print(f"⏰ Lần cập nhật tiếp theo: {next_run.strftime('%H:%M:%S')}")
+            print(f"⏰ Lần cập nhật tiếp theo (UTC): {next_run.strftime('%H:%M:%S')}")
             print(f"💤 Tạm dừng {sleep_seconds} giây (Trạng thái rảnh RAM)...")
             time.sleep(sleep_seconds)
 
         else:
-            # Chế độ nghỉ đêm (sau 22h đêm đến trước 6h sáng)
+            # Chế độ nghỉ đêm (ngoài khung giờ)
             now_str = datetime.now().strftime("%H:%M:%S")
-            print(f"🌙 [{now_str}] Đã ngoài giờ làm việc (nghỉ từ {END_HOUR}h - {START_HOUR}h).")
+            print(f"🌙 [{now_str} UTC] Đã ngoài giờ làm việc (nghỉ đêm).")
             print("💤 Đang ngủ đêm... Kiểm tra lại sau 10 phút.")
             time.sleep(600)
 
