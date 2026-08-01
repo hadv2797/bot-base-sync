@@ -2,7 +2,7 @@ import time
 from playwright.sync_api import sync_playwright
 
 BASE_URL = "https://workflow.base.vn/qtxulysuco-12626"
-USERNAME = "ha.fusi.com"
+USERNAME = "ha.dv@manfusi.com"
 PASSWORD = "RXQ4C"
 
 def login_and_get_page(playwright_instance):
