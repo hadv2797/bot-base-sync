@@ -6,11 +6,11 @@ from playwright.sync_api import sync_playwright
 # Import các hàm từ 2 thư mục con
 from workflow_nghiem_thu.step1_login import login_and_get_page as login_nghiem_thu
 from workflow_nghiem_thu.step2_scrape import scrape_nghiem_thu_ban_giao
-from workflow_nghiem_thu.step3_push_db import push_jobs_to_supabase as push_nghiem_thu
+from workflow_nghiem_thu.step3_push_db import push_to_supabase as push_nghiem_thu
 
 from workflow_su_co.step1_login import login_and_get_page as login_su_co
 from workflow_su_co.step2_scrape import scrape_nghiem_thu_ban_giao as scrape_su_co
-from workflow_su_co.step3_push_db import push_jobs_to_supabase as push_su_co
+from workflow_su_co.step3_push_db import push_to_supabase as push_su_co
 
 START_HOUR = 7   # 7h sáng
 END_HOUR = 21    # 21h tối
