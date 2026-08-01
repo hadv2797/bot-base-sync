@@ -2,28 +2,48 @@ import time
 from playwright.sync_api import sync_playwright
 
 BASE_URL = "https://workflow.base.vn/qttrienkhaiduandandung-12551"
-USERNAME = "ha.dv@manfusi.com"
-PASSWORD = "RXZZL48Q4C"
+USERNAME = "hadv@manfusi.com"
+PASSWORD = "RX8Q4C"
 
 def login_and_get_page(playwright_instance):
     print("--- KHỞI TẠO & ĐĂNG NHẬP BASE ---")
     
-    # Dùng luôn playwright_instance (biến p) truyền từ ngoài vào
-    browser = playwright_instance.chromium.launch(headless=True)
+    # 1. Thêm cờ tối ưu RAM & qua mặt Cloudflare/Headless Check
+    browser = playwright_instance.chromium.launch(
+        headless=True,
+        args=[
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+            "--no-zygote",
+            "--disable-gpu"
+        ]
+    )
     
+    # 2. Fake User-Agent chuẩn trình duyệt thật trên Windows
     context = browser.new_context(
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         viewport={'width': 1920, 'height': 1080},
         permissions=['notifications']
     )
     page = context.new_page()
 
     print("1. Đang mở trang Base Workflow...")
-    page.goto(BASE_URL, wait_until="domcontentloaded", timeout=60000)
-    page.wait_for_timeout(2000)
+    # Tăng timeout lên 90s và đổi wait_until="commit" để tránh bị đứng khi tải tài nguyên phụ
+    try:
+        page.goto(BASE_URL, wait_until="commit", timeout=90000)
+    except Exception as e:
+        print(f"Lần 1 goto chập chờn, thử lại... Chi tiết: {e}")
+        page.goto(BASE_URL, wait_until="domcontentloaded", timeout=90000)
+
+    page.wait_for_timeout(3000)
 
     # Đăng nhập Email
     if "account.base.vn" in page.url or page.query_selector("input[name='email']"):
         print("2. Nhập Email...")
+        page.wait_for_selector("input[name='email']", timeout=30000)
         page.fill("input[name='email']", USERNAME)
         page.wait_for_timeout(500)
 
@@ -35,7 +55,7 @@ def login_and_get_page(playwright_instance):
 
         # Đăng nhập Mật khẩu
         print("3. Nhập Mật khẩu...")
-        page.wait_for_selector("input[name='password']", timeout=15000)
+        page.wait_for_selector("input[name='password']", timeout=30000)
         page.fill("input[name='password']", PASSWORD)
         page.wait_for_timeout(500)
 
@@ -45,7 +65,7 @@ def login_and_get_page(playwright_instance):
         else:
             page.press("input[name='password']", "Enter")
 
-        page.wait_for_url(lambda url: "workflow.base.vn" in url, timeout=30000)
+        page.wait_for_url(lambda url: "workflow.base.vn" in url, timeout=45000)
         print("-> ✅ Đăng nhập thành công!")
 
     page.wait_for_timeout(3000)
@@ -57,5 +77,4 @@ def login_and_get_page(playwright_instance):
         popup_btn.click()
         print("-> ✅ Đã tắt Popup!")
     
-    # Trả về 2 giá trị đúng khớp với line 21 của bro: browser, page = login_and_get_page(p)
     return browser, page
