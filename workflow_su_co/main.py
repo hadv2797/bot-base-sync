@@ -42,7 +42,7 @@ END_HOUR = 22    # 22h tối
 
 def is_working_hours():
     """Kiểm tra xem hiện tại có nằm trong khoảng 6h - 22h không"""
-    now = datetime.now()
+    now = datetime.now() + timedelta(hours=7)
     return START_HOUR <= now.hour < END_HOUR
 
 def run_single_pipeline():
