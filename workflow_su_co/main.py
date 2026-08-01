@@ -41,9 +41,13 @@ START_HOUR = 6   # 6h sáng
 END_HOUR = 22    # 22h tối
 
 def get_now_vn():
-    """Lấy đúng chuẩn múi giờ UTC+7 (Việt Nam) không phụ thuộc OS/Docker"""
+    """Lấy đúng chuẩn múi giờ UTC+7 (Việt Nam)"""
     tz_vn = timezone(timedelta(hours=7))
     return datetime.now(tz_vn)
+
+def is_working_hours():
+    """Kiểm tra xem hiện tại có nằm trong khoảng 6h - 22h giờ VN không"""
+    now = get_now_vn()
     return START_HOUR <= now.hour < END_HOUR
 
 def run_single_pipeline():
