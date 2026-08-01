@@ -3,7 +3,7 @@ import sys
 import time
 import random
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from playwright.sync_api import sync_playwright
 
@@ -40,9 +40,10 @@ threading.Thread(target=run_dummy_server, daemon=True).start()
 START_HOUR = 6   # 6h sáng
 END_HOUR = 22    # 22h tối
 
-def is_working_hours():
-    """Kiểm tra xem hiện tại có nằm trong khoảng 6h - 22h không"""
-    return datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+def get_now_vn():
+    """Lấy đúng chuẩn múi giờ UTC+7 (Việt Nam) không phụ thuộc OS/Docker"""
+    tz_vn = timezone(timedelta(hours=7))
+    return datetime.now(tz_vn)
     return START_HOUR <= now.hour < END_HOUR
 
 def run_single_pipeline():
