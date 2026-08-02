@@ -99,7 +99,7 @@ def main():
             # Run 1 chu kỳ duy nhất (mở browser -> cào -> đóng browser)
             run_single_pipeline()
 
-            # Random thời gian nghỉ từ 1100s đến 1300s (~18 - 21 phút)
+            # Random thời gian nghỉ từ 150s đến 180s (~2 - 3 phút)
             sleep_seconds = random.randint(150, 180)
             
             # Tính thời gian chạy tiếp theo thuần UTC (khớp hoàn toàn với máy chủ Render)
