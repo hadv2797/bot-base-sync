@@ -100,7 +100,7 @@ def main():
             run_single_pipeline()
 
             # Random thời gian nghỉ từ 1100s đến 1300s (~18 - 21 phút)
-            sleep_seconds = random.randint(1100, 1300)
+            sleep_seconds = random.randint(150, 180)
             
             # Tính thời gian chạy tiếp theo thuần UTC (khớp hoàn toàn với máy chủ Render)
             next_run = datetime.now() + timedelta(seconds=sleep_seconds)
