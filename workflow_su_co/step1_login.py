@@ -1,93 +1,70 @@
 import time
 from playwright.sync_api import sync_playwright
 
-BASE_URL = "https://workflow.base.vn/qtxulysuco-12626"
-USERNAME = "ha.dv@manfusi.com"
-PASSWORD = "RXZZL48Q4C"
-
-def login_and_get_page(playwright_instance):
-    print("--- KHỞI TẠO & ĐĂNG NHẬP BASE ---")
+def parse_stage_118754(page):
+    print("--- BẮT ĐẦU QUÉT DỮ LIỆU CỘT STAGE-118754 ---")
     
-    browser = playwright_instance.chromium.launch(
-        headless=True,
-        args=[
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-accelerated-2d-canvas",
-            "--no-first-run",
-            "--no-zygote",
-            "--disable-gpu",
-            "--disable-render-backgrounding",
-            "--disable-background-timer-throttling",
-            "--disable-backgrounding-occluded-windows",
-            "--disable-component-extensions-with-background-pages",
-        ]
-    )
-    
-    context = browser.new_context(
-        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        viewport={'width': 1920, 'height': 1080},
-        permissions=['notifications']
-    )
-    page = context.new_page()
-
-    print("1. Đang mở trang Base Workflow...")
-    page.goto(BASE_URL, wait_until="domcontentloaded", timeout=60000)
+    # 1. Chờ trang tải hoàn toàn và cuộn trang nhẹ để kích hoạt Lazy Load
+    page.wait_for_load_state("domcontentloaded")
+    page.mouse.wheel(0, 500)
     page.wait_for_timeout(2000)
 
-    # Nếu bị đẩy về trang Login
-    if "account.base.vn" in page.url or page.locator("input[name='email']").is_visible():
-        print("2. Nhập Email...")
-        page.wait_for_selector("input[name='email']", timeout=15000)
-        page.fill("input[name='email']", USERNAME)
-        page.wait_for_timeout(500)
-
-        # Click nút Tiếp tục (xử lý cả dạng div.ok lẫn button)
-        btn_continue = page.locator("form div.ok, form button[type='submit'], input[type='submit']").first
-        if btn_continue.is_visible():
-            btn_continue.click()
-        else:
-            page.press("input[name='email']", "Enter")
-
-        print("3. Nhập Mật khẩu...")
-        page.wait_for_selector("input[name='password']", timeout=15000)
-        page.fill("input[name='password']", PASSWORD)
-        page.wait_for_timeout(500)
-
-        # Force Click nút Đăng nhập
-        btn_login = page.locator("form div.ok, form button[type='submit'], input[type='submit']").first
-        if btn_login.is_visible():
-            btn_login.click(force=True)
-        else:
-            page.press("input[name='password']", "Enter")
-
-        print("Đang chờ tải dữ liệu Workflow...")
-        # Thay vì wait_for_url, ta chờ trực tiếp một element đặc trưng của Base Workflow xuất hiện
-        try:
-            page.wait_for_selector("body", timeout=30000)
-            page.wait_for_load_state("networkidle", timeout=30000)
-        except Exception:
-            print("Cảnh báo: Network chưa idle nhưng vẫn tiếp tục...")
-
-        print("-> ✅ Đăng nhập & Chuyển trang hoàn tất!")
-
-    page.wait_for_timeout(3000)
-
-    # Xử lý Popup thông báo
-    print("4. Xử lý Popup thông báo...")
+    # 2. Thử chờ stage xuất hiện trong tối đa 15 giây
     try:
-        popup_btn = page.locator("text='TIẾP TỤC'").first
-        if popup_btn.is_visible(timeout=3000):
-            popup_btn.click()
-            print("-> ✅ Đã tắt Popup!")
+        page.wait_for_selector("#stage-118754", timeout=15000, state="attached")
+        print("-> ✅ Đã tìm thấy cột #stage-118754 trên DOM!")
     except Exception:
-        pass
-    
-    return browser, page
+        print("⚠️ Không thấy ID #stage-118754 theo cách thông thường, chuyển sang quét theo Title...")
 
-if __name__ == "__main__":
-    with sync_playwright() as p:
-        browser, page = login_and_get_page(p)
-        print("Tiêu đề trang:", page.title())
-        browser.close()
+    # 3. Lấy Element Stage (Ưu tiên ID -> Sau đó đến tên Giai đoạn)
+    stage_locator = page.locator("#stage-118754")
+    if stage_locator.count() == 0:
+        stage_locator = page.locator(".stage").filter(
+            has=page.locator("span", has_text="Xác nhận hoàn thành với khách hàng")
+        ).first
+
+    if stage_locator.count() == 0:
+        print("❌ Vẫn không tìm thấy cột stage. Vui lòng kiểm tra lại quyền tài khoản hoặc URL!")
+        return []
+
+    # 4. Trích xuất danh sách công việc (Jobs) bên trong Stage
+    jobs_data = []
+    job_items = stage_locator.locator(".item.--job-wrapper").all()
+    print(f"-> 🎯 Tìm thấy {len(job_items)} công việc trong giai đoạn này.")
+
+    for item in job_items:
+        # Lấy Job ID & Token
+        job_id = item.get_attribute("data-id")
+        
+        # Lấy Tiêu đề job
+        title_el = item.locator(".name").first
+        title = title_el.inner_text().strip() if title_el.count() > 0 else ""
+        
+        # Lấy Mô tả ngắn / Tagline
+        tagline_el = item.locator(".tagline").first
+        tagline = tagline_el.inner_text().strip() if tagline_el.count() > 0 else ""
+        
+        # Lấy danh sách Tags
+        tags = [t.inner_text().strip() for t in item.locator(".ui-tag").all()]
+        
+        # Lấy Người phụ trách (Assignee)
+        uname_el = item.locator(".uname").first
+        assignee = uname_el.inner_text().strip() if uname_el.count() > 0 else ""
+        
+        # Lấy Thời hạn
+        time_el = item.locator(".time").first
+        deadline = time_el.inner_text().strip() if time_el.count() > 0 else ""
+
+        payload = {
+            "job_id": job_id,
+            "title": title,
+            "tagline": tagline,
+            "tags": tags,
+            "assignee": assignee,
+            "deadline": deadline,
+            "stage_id": "118754"
+        }
+        jobs_data.append(payload)
+
+    print(f"-> ✅ Trích xuất thành công {len(jobs_data)} bản ghi!")
+    return jobs_data
