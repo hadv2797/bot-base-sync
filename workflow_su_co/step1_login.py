@@ -1,7 +1,7 @@
 import time
 from playwright.sync_api import sync_playwright
 
-def parse_stage_118754(page):
+def login_and_get_page(page):
     print("--- BẮT ĐẦU QUÉT DỮ LIỆU CỘT STAGE-118754 ---")
     
     # 1. Chờ trang tải hoàn toàn và cuộn trang nhẹ để kích hoạt Lazy Load
