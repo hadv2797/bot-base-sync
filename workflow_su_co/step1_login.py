@@ -15,15 +15,15 @@ def login_and_get_page(playwright_instance):
             "--no-sandbox",
             "--disable-setuid-sandbox",
             "--disable-dev-shm-usage",
-            '--single-process',
+            "--single-process",
             "--disable-accelerated-2d-canvas",
             "--no-first-run",
             "--no-zygote",
-            "--disable-gpu"
-            '--disable-render-backgrounding',
-            '--disable-background-timer-throttling',
-            '--disable-backgrounding-occluded-windows',
-            '--disable-component-extensions-with-background-pages',
+            "--disable-gpu",
+            "--disable-render-backgrounding",
+            "--disable-background-timer-throttling",
+            "--disable-backgrounding-occluded-windows",
+            "--disable-component-extensions-with-background-pages",
         ]
     )
     
